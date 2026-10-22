@@ -22,6 +22,7 @@ function criarFilme(filme) {
   imagem.src = filme.url_capa;
   imagem.alt = `Capa de ${filme.titulo_filme}`;
   imagem.loading = "lazy";
+
   imagem.onerror = () => {
     imagem.alt = "Capa indisponível";
     imagem.removeAttribute("src");
@@ -45,31 +46,56 @@ function criarFilme(filme) {
   const rodape = document.createElement("div");
   rodape.className = "filme-rodape";
 
-  const textoCurtidas = document.createElement("span");
-  textoCurtidas.className = "curtidas";
+  const botaoCurtir = document.createElement("button");
+  botaoCurtir.type = "button";
+  botaoCurtir.className = "curtidas btn-curtir";
+  botaoCurtir.dataset.filmeId = String(filme.id_filme);
+  botaoCurtir.setAttribute(
+    "aria-label",
+    `Curtir ${filme.titulo_filme}`
+  );
 
   const icone = document.createElement("img");
   icone.src = "/icons/coracao.svg";
   icone.alt = "";
+  icone.setAttribute("aria-hidden", "true");
 
   const quantidade = document.createElement("span");
+  quantidade.className = "quantidade-curtidas";
   quantidade.textContent = String(filme.total_curtidas);
 
-  textoCurtidas.append(icone, quantidade);
-  rodape.append(textoCurtidas);
+  botaoCurtir.append(icone, quantidade);
+  rodape.append(botaoCurtir);
 
   artigo.append(containerCapa, titulo, rodape);
 
   return artigo;
 }
 
-async function carregarFilmes() {
+// Carrega o catálogo completo ou os filmes correspondentes à busca.
+async function carregarFilmes(busca = "") {
   galeria.replaceChildren();
-  statusCatalogo.textContent = "Carregando filmes...";
+
+  statusCatalogo.textContent = busca
+    ? "Pesquisando filmes..."
+    : "Carregando filmes...";
+
   mostrarMensagem("");
 
   try {
-    const resposta = await fetch("/api/filmes");
+    const parametros = new URLSearchParams();
+
+    if (busca) {
+      parametros.set("busca", busca);
+    }
+
+    const url = parametros.toString()
+      ? `/api/filmes?${parametros.toString()}`
+      : "/api/filmes";
+
+    const resposta = await fetch(url, {
+      credentials: "same-origin",
+    });
 
     if (!resposta.ok) {
       throw new Error("Falha ao consultar a API.");
@@ -82,7 +108,10 @@ async function carregarFilmes() {
     }
 
     if (dados.filmes.length === 0) {
-      statusCatalogo.textContent = "Nenhum filme cadastrado.";
+      statusCatalogo.textContent = busca
+        ? "Nenhum filme encontrado para essa busca."
+        : "Nenhum filme cadastrado.";
+
       return;
     }
 
@@ -93,31 +122,95 @@ async function carregarFilmes() {
     }
 
     galeria.append(fragmento);
-    statusCatalogo.textContent =
-      `${dados.filmes.length} filme(s) no catálogo`;
+
+    statusCatalogo.textContent = busca
+      ? `${dados.filmes.length} filme(s) encontrado(s)`
+      : `${dados.filmes.length} filme(s) no catálogo`;
   } catch (erro) {
     console.error("Erro ao carregar o catálogo:", erro);
-    statusCatalogo.textContent = "Não foi possível carregar o catálogo.";
-    mostrarMensagem("Verifique a conexão com o servidor e tente novamente.");
+
+    statusCatalogo.textContent =
+      "Não foi possível carregar o catálogo.";
+
+    mostrarMensagem(
+      "Verifique a conexão com o servidor e tente novamente."
+    );
   }
 }
 
-formBusca.addEventListener("submit", (evento) => {
-  evento.preventDefault();
+// Pesquisa por título ou gênero.
+if (formBusca && campoBusca) {
+  formBusca.addEventListener("submit", (evento) => {
+    evento.preventDefault();
 
-  const busca = campoBusca.value.trim();
+    const busca = campoBusca.value.trim();
 
-  if (!busca) {
-    mostrarMensagem("Digite o nome de um administrador para pesquisar.");
-    campoBusca.focus();
+    carregarFilmes(busca);
+  });
+}
+
+// Registra ou remove curtidas.
+galeria.addEventListener("click", async (evento) => {
+  const botao = evento.target.closest(".btn-curtir");
+
+  if (!botao || !galeria.contains(botao)) {
     return;
   }
 
-  mostrarMensagem(
-    "A busca por administrador será ativada na próxima etapa, com autenticação."
-  );
+  if (botao.disabled) {
+    return;
+  }
+
+  const idFilme = botao.dataset.filmeId;
+  const quantidade = botao.querySelector(".quantidade-curtidas");
+
+  if (!idFilme || !quantidade) {
+    return;
+  }
+
+  botao.disabled = true;
+
+  try {
+    const resposta = await fetch(
+      `/api/filmes/${encodeURIComponent(idFilme)}/curtida`,
+      {
+        method: "POST",
+        credentials: "same-origin",
+      }
+    );
+
+    const dados = await resposta.json();
+
+    if (resposta.status === 401) {
+      mostrarMensagem("Entre na sua conta para curtir um filme.");
+      return;
+    }
+
+    if (!resposta.ok) {
+      throw new Error(
+        dados.erro || "Não foi possível curtir o filme."
+      );
+    }
+
+    const totalAtual = Number(quantidade.textContent);
+
+    quantidade.textContent = String(
+      totalAtual + (dados.curtido ? 1 : -1)
+    );
+
+    mostrarMensagem(dados.mensagem);
+  } catch (erro) {
+    console.error("Erro ao curtir filme:", erro);
+
+    mostrarMensagem(
+      erro.message || "Erro ao registrar a curtida."
+    );
+  } finally {
+    botao.disabled = false;
+  }
 });
 
+// Inicializa o catálogo.
 carregarFilmes();
 
 /* ========================================
@@ -153,9 +246,8 @@ carregarFilmes();
   botaoSair.type = "button";
   botaoSair.textContent = "Sair";
   botaoSair.hidden = true;
-  botaoEntrar.insertAdjacentElement("afterend", botaoSair);
 
-  let usuarioAtual = null;
+  botaoEntrar.insertAdjacentElement("afterend", botaoSair);
 
   function mostrarErro(texto) {
     erroLogin.textContent = texto;
@@ -170,8 +262,6 @@ carregarFilmes();
   }
 
   function atualizarUsuario(usuario) {
-    usuarioAtual = usuario;
-
     if (!usuario) {
       if (nomeUsuario) {
         nomeUsuario.textContent = "@StreamFlix";
@@ -269,6 +359,7 @@ carregarFilmes();
         mostrarErro(
           dados.erro || "Não foi possível realizar o login."
         );
+
         return;
       }
 
@@ -306,7 +397,10 @@ carregarFilmes();
       mostrarMensagem("Você saiu da sua conta.");
     } catch (erro) {
       console.error("Erro ao sair:", erro);
-      mostrarMensagem("Não foi possível sair. Tente novamente.");
+
+      mostrarMensagem(
+        "Não foi possível sair. Tente novamente."
+      );
     } finally {
       botaoSair.disabled = false;
     }
