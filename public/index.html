@@ -1,0 +1,221 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#000000">
+    <meta name="description" content="SAEPVision — galeria de fotografias e fotógrafos.">
+    <title>SAEPVision</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <script src="/js/script.js" defer></script>
+</head>
+<body>
+    <header class="cabecalho">
+        <div class="secao-usuario">
+            <div class="avatar-wrapper">
+                <img
+                    src="/img/default.jpg"
+                    id="foto-usuario"
+                    class="foto-perfil"
+                    alt="Foto do perfil"
+                >
+                <span id="avatar-fallback" class="avatar-fallback" aria-hidden="true">S</span>
+            </div>
+            <span id="nome-usuario">@SAEPVision</span>
+            <button id="btn-ver-perfil" class="btn-perfil" type="button" disabled>
+                Ver Perfil
+            </button>
+        </div>
+
+        <a class="secao-empresa" href="/" aria-label="Página inicial SAEPVision">
+            SAEPVision
+        </a>
+
+        <div class="acoes-cabecalho">
+            <button id="btn-auth" class="btn-login" type="button">Login</button>
+        </div>
+    </header>
+
+    <main>
+        <section class="area-busca" aria-label="Buscar fotógrafos">
+            <div class="campo-busca">
+                <label class="sr-only" for="input-busca">Nome do fotógrafo</label>
+                <input
+                    type="search"
+                    id="input-busca"
+                    placeholder="Digite o nome do fotógrafo..."
+                    autocomplete="off"
+                >
+                <button
+                    id="btn-buscar"
+                    class="btn-buscar"
+                    type="button"
+                    aria-label="Buscar fotógrafo"
+                >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="10.8" cy="10.8" r="6.8"></circle>
+                        <path d="m16 16 5 5"></path>
+                    </svg>
+                </button>
+            </div>
+            <p id="msg-busca-erro" class="msg-erro" role="status">
+                Nenhuma publicação encontrada para essa busca.
+            </p>
+        </section>
+
+        <section class="secao-galeria" aria-label="Galeria de fotografias">
+            <div class="cabecalho-galeria">
+                <div>
+                    <p class="sobretitulo">DESCUBRA NOVOS OLHARES</p>
+                    <h1>Galeria de fotografias</h1>
+                </div>
+                <button id="btn-limpar-busca" class="btn-texto" type="button" hidden>
+                    Limpar busca
+                </button>
+            </div>
+
+            <section class="galeria" id="galeria-fotos" aria-live="polite"></section>
+
+            <div id="galeria-vazia" class="estado-vazio" hidden>
+                <h2>Nenhuma fotografia por aqui</h2>
+                <p>Tente outra busca ou volte para ver todas as publicações.</p>
+                <button id="btn-voltar-galeria" class="btn-submit" type="button">
+                    Ver todas as fotografias
+                </button>
+            </div>
+        </section>
+
+        <section id="secao-cadastro-foto" class="secao-cadastro" hidden>
+            <div class="cabecalho-secao">
+                <p class="sobretitulo">ÁREA DO FOTÓGRAFO</p>
+                <h2>Publicar fotografia</h2>
+                <p>Preencha os dados para adicionar uma fotografia à galeria.</p>
+            </div>
+
+            <form id="form-cadastro-foto" class="form-cadastro">
+                <div class="grupo-form">
+                    <label for="titulo-imagem">Título da imagem</label>
+                    <input
+                        type="text"
+                        id="titulo-imagem"
+                        maxlength="150"
+                        placeholder="Ex.: Dedo de Deus"
+                        required
+                    >
+                </div>
+
+                <div class="grupo-form">
+                    <label for="fonte-origem">Local ou fonte de origem</label>
+                    <input
+                        type="text"
+                        id="fonte-origem"
+                        maxlength="150"
+                        placeholder="Ex.: Rio de Janeiro"
+                        required
+                    >
+                </div>
+
+                <div class="grupo-form">
+                    <label for="arquivo-imagem">Arquivo da fotografia</label>
+                    <input
+                        type="file"
+                        id="arquivo-imagem"
+                        accept="image/jpeg,image/png,image/webp,image/gif"
+                        required
+                    >
+                    <p class="ajuda-form">Formatos aceitos: JPG, PNG, WEBP e GIF.</p>
+                </div>
+
+                <p id="erro-cadastro-foto" class="msg-erro" role="alert"></p>
+
+                <button class="btn-submit" type="submit">Publicar fotografia</button>
+            </form>
+        </section>
+    </main>
+
+    <div class="modal" id="modal-login" role="dialog" aria-modal="true"
+        aria-labelledby="titulo-modal-login" hidden>
+        <div class="modal-conteudo">
+            <button
+                class="btn-fechar"
+                id="btn-fechar-modal"
+                type="button"
+                aria-label="Fechar janela"
+            >&times;</button>
+
+            <p class="sobretitulo">BEM-VINDO AO SAEPVISION</p>
+            <h2 id="titulo-modal-login">Entrar na sua conta</h2>
+            <p class="texto-modal">Entre para curtir fotografias e explorar os fotógrafos.</p>
+
+            <form id="form-login">
+                <div class="grupo-form">
+                    <label for="login-email">E-mail</label>
+                    <input
+                        type="email"
+                        id="login-email"
+                        placeholder="voce@exemplo.com"
+                        autocomplete="username"
+                        required
+                    >
+                </div>
+
+                <div class="grupo-form">
+                    <label for="login-senha">Senha</label>
+                    <input
+                        type="password"
+                        id="login-senha"
+                        placeholder="Digite sua senha"
+                        autocomplete="current-password"
+                        required
+                    >
+                </div>
+
+                <p id="erro-credenciais" class="msg-erro" role="alert">
+                    E-mail ou senha incorretos.
+                </p>
+
+                <div class="botoes-modal">
+                    <button type="button" class="btn-cancelar" id="btn-cancelar-login">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn-submit">Entrar</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="sobreposicao-menu" id="sobreposicao-menu" hidden></div>
+
+    <aside class="menu-lateral" id="menu-fotografo"
+        aria-labelledby="menu-nome-fotografo" aria-hidden="true">
+        <button
+            class="btn-fechar"
+            id="btn-fechar-menu"
+            type="button"
+            aria-label="Fechar painel"
+        >&times;</button>
+
+        <p class="sobretitulo">PAINEL DO FOTÓGRAFO</p>
+        <h2 id="menu-nome-fotografo">@fotografo</h2>
+
+        <div class="metricas-fotografo">
+            <div class="metrica">
+                <strong id="total-likes">0</strong>
+                <span>Curtidas</span>
+            </div>
+            <div class="metrica">
+                <strong id="total-publicacoes">0</strong>
+                <span>Publicações</span>
+            </div>
+        </div>
+
+        <h3 class="titulo-publicacoes">Suas publicações</h3>
+        <ul id="lista-suas-publicacoes" class="lista-publicacoes"></ul>
+        <p id="lista-publicacoes-vazia" class="texto-secundario" hidden>
+            Você ainda não publicou fotografias.
+        </p>
+    </aside>
+    </footer>
+</body>
+</html>
